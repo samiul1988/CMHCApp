@@ -2,13 +2,116 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-label{
-  color: green;
+body {
+  color: #646262;
+  font-family: source sans pro,sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    text-rendering: optimizeLegibility;
 }
+label{
+  color: whitesmoke;
+}
+
+#carouselControl{
+  height: 200px;
+}
+
+#main-header{
+  height: 146px;
+}
+.header-text {
+  text-align: center;
+}
+/* .section-inner{
+  width: 70rem;
+} */
+#header-carousel {
+  min-height:330px;
+  background-image: url('../CMHC_Header_Img.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  /* opacity: 0.8; */
+  /* color: #ffffff; */
+}
+
+#footer-section {
+  min-height:330px;
+  background-image: url('../CMHC Tool Picture 1.jpg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  /* opacity: 0.8; */
+  /* color: #ffffff; */
+}
+
+#footer-copyright {
+  min-height:50px;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #fff;
+}
+
+#input-form {
+  background-color: rgb(30, 28, 41)!important;
+  color: whitesmoke;
+  /* background-color: rgba(0, 100, 100, 0.4)!important; */
+}
+
+#input-form-result{
+  background-color: rgb(123, 122, 124)!important;
+  color: whitesmoke;
+  /* background-color: rgba(0, 100, 100, 0.4)!important; */
+}
+.form-control {
+  font-weight: 600!important;
+}
+.header-carousel-overlay {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 330px;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+#header-text-container {
+  color: #fff;
+}
+.top-header {
+  background-color: rgb(62, 62, 62);
+  color: #a8a8a8;
+    font-size: 13px;
+    height: 60px;
+}
+.right-header {
+  float: right;
+  text-align: right;
+}
+
+.right-header > a {
+  color: #a8a8a8!important;
+}
+
+.right-header > a:hover {
+  color: #eeecec!important;
+  text-decoration: none!important;
+}
+
+.social > a {
+  color: #a8a8a8!important;
+}
+.instruction-section {
+  /* border-top: 1px solid black; */
+  
+  min-height: 250px;
+  /* background-color: rgba(0, 0, 0, 0.2); */
+}
+
 .svgArea{
-    border-color: black;
-    border:3px solid gray;
-    border-radius: 10px;
+    /* border-color: black; */
+    border:1px solid gray;
+    border-radius: 5px;
 }
 .divInput{
     position: relative;
@@ -16,11 +119,11 @@ label{
     left: 50px;
     top: 50px;
     border-style: solid;
-    border:3px solid gray;
-    border-radius: 10px;
+    border:1px solid gray;
+    border-radius: 5px;
 }
 .svgText{
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
 }
 .svgTextMedium{
@@ -30,8 +133,11 @@ label{
   font-size: 12px;
 }
 .verticalTextUp{
-  transform: translate(290px,500px) rotate(-90deg);
-  transform-origin: left;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  /* transform: translate(19%,72%) rotate(-90deg); */
+  /* transform: translate(290px,500px) rotate(-90deg); */
+  /* transform-origin: center; */
 }
 .interceptLine{
   stroke-width:1;
@@ -41,10 +147,11 @@ label{
   stroke: blue;
 }
 .groundSurface{
-  fill: #e6ffe6; 
+  fill: rgba(0, 0, 0, 0.2); 
+  /* #e6ffe6;  */
   /* #ace600 ; */
   fill-opacity: 50%; 
-  background-color: #DFDBE5;
+  background-color:#DFDBE5;
   /* background-color: #dbeac1; */
 }
 input[type="text"]:focus{
@@ -74,8 +181,12 @@ input[type="text"]:focus{
     border-radius: 10px;
 }
 .inputBoxLabel{
-  width:330px;
+  width:370px;
 }
+.inputBoxControl{
+  width:150px;
+}
+
 .inputBoxSelect{
   width: 500px;
 }
@@ -89,9 +200,9 @@ input[type="text"]:focus{
   font-weight:bold;
   color: rgb(248, 246, 250);  
 }
-.navBar{
-  background-color:#062e7e;
-  height: 80%;
+.nav-bar{
+  /* background-color:#062e7e; */
+  height: 100px;
 }
 .navBarLink{
   background-color:#062e7e;
@@ -130,7 +241,7 @@ input[type="text"]:focus{
 }
 
 .plane{
-    stroke-width:8;
+    stroke-width:5;
 }
 .receiver-plane{
     stroke:rgb(158, 148, 148);
@@ -195,3 +306,21 @@ input:checked + .slider:before {
   transform: translateX(26px);
 }
 
+@media screen and (max-width: 768px) {
+  .svgText{
+    font-size: 12px;
+    /* font-weight: bold;
+    fill: red; */
+  }
+  .svgTextMedium{
+    font-size: 10px;
+  }
+  .svgTextSmall{
+    font-size: 8px;
+  }  
+}
+@media screen and (min-width: 692px) {
+  .header-text {
+    text-align: right;
+  }
+}

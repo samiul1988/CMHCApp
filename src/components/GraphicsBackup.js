@@ -6,154 +6,154 @@ import {
     calculateCorrDistAndHeight, calculateEffBarrierAtt, calculatePathLengthDiffFromEffBarrierAtt, isBreakingLOS, angleBetweenPoints,
     calculateFirstPointOfContact, calculateEffectiveBarrierPosition, extrapolateLine
 } from '../utils'
-// import { strict } from 'assert';
+import { strict } from 'assert';
 
-let SVG_CONTAINER_WIDTH = window.innerWidth * 0.7; // 1500
-let SVG_CONTAINER_HEIGHT = SVG_CONTAINER_WIDTH * 0.47;
-let SCALE_Y = 50 / (SVG_CONTAINER_WIDTH * 3 / 5); //  unit: meter / pixel
-let SCALE_X = 50 / (SVG_CONTAINER_WIDTH * 3 / 5); //  unit: meter / pixel
-let SOURCE_HEIGHT_IN_PIXELS = 0.8 / SCALE_Y;
-let BARRIER_HEIGHT_IN_PIXELS = 1.8 / SCALE_Y;
-let RECEIVER_HEIGHT_IN_PIXELS = 1.5 / SCALE_Y;
-let handleDragMidLineAnchorLeftX = SVG_CONTAINER_WIDTH * 600 / 1500; // 600
-let handleDragMidLineAnchorRightX = SVG_CONTAINER_WIDTH * 900 / 1500; // 900
+
+let SCALE_Y = 50 / 900; //10 / 225;    // 225 pixels = 10 m
+let SCALE_X = 50 / 900;
+const SOURCE_HEIGHT_IN_PIXELS = 0.8 / SCALE_Y;
+const BARRIER_HEIGHT_IN_PIXELS = 1.8 / SCALE_Y;
+const RECEIVER_HEIGHT_IN_PIXELS = 1.5 / SCALE_Y;
+const RECEIVER_LINE_BOUNDS_IN_PIXELS = 225;
+let handleDragMidLineAnchorLeftX = 600;
+let handleDragMidLineAnchorRightX = 900;
 let RECEIVER_SYMBOL_ADJUSTMENT_FACTOR = 0;
-let RECEIVER_LINE_BOUNDS_IN_PIXELS = 225;
 
 class Graphics extends React.Component {
     state = {
         canvasProps: {
-            canvasHeight: SVG_CONTAINER_HEIGHT,
-            canvasWidth: SVG_CONTAINER_WIDTH
+            canvasHeight: 700,
+            canvasWidth: 1500
         },
         labelLeftLimitLine: {
-            x1: SVG_CONTAINER_WIDTH * 0.2, // 300
-            y1: SVG_CONTAINER_HEIGHT * 0.5, // 350
-            x2: SVG_CONTAINER_WIDTH * 0.2, // 300
-            y2: SVG_CONTAINER_HEIGHT // 700
+            x1: 300,
+            y1: 350,
+            x2: 300,
+            y2: 700
         },
         labelRightLimitLine: {
-            x1: SVG_CONTAINER_WIDTH * 4 / 5, // 1200
-            y1: SVG_CONTAINER_HEIGHT * 0.5, // 350,
-            x2: SVG_CONTAINER_WIDTH * 4 / 5,// 1200,
-            y2: SVG_CONTAINER_HEIGHT // 700
+            x1: 1200,
+            y1: 350,
+            x2: 1200,
+            y2: 700
         },
         sourceToReceiverDistanceLabelLine: {
-            x1: SVG_CONTAINER_WIDTH * 1 / 5, //300,
-            y1: SVG_CONTAINER_HEIGHT * 4.8 / 5, //670,
-            x2: SVG_CONTAINER_WIDTH * 4 / 5, //1200,
-            y2: SVG_CONTAINER_HEIGHT * 4.8 / 5, //670
+            x1: 300,
+            y1: 670,
+            x2: 1200,
+            y2: 670
         },
         sourceToBarrierLabelHorizontalLine: {
-            x1: SVG_CONTAINER_WIDTH * 1 / 5, // 300,
-            y1: SVG_CONTAINER_HEIGHT * 4.6 / 5, // 610,
-            x2: SVG_CONTAINER_WIDTH * 1 / 2, // 750,
-            y2: SVG_CONTAINER_HEIGHT * 4.6 / 5, // 610
+            x1: 300,
+            y1: 610,
+            x2: 750,
+            y2: 610
         },
         receiverToBarrierLabelHorizontalLine: {
-            x1: SVG_CONTAINER_WIDTH * 1 / 2, // 750,
-            y1: SVG_CONTAINER_HEIGHT * 4.6 / 5, // 610,
-            x2: SVG_CONTAINER_WIDTH * 4 / 5, // 1200,
-            y2: SVG_CONTAINER_HEIGHT * 4.6 / 5 // 610
+            x1: 750,
+            y1: 610,
+            x2: 1200,
+            y2: 610
         },
         sourceHeightTextPosition: {
-            x: SVG_CONTAINER_WIDTH * 80 / 1500,
-            y: SVG_CONTAINER_HEIGHT * 330 / 700
+            x: 80,
+            y: 330
         },
         sourceLinePosition: {
-            x1: SVG_CONTAINER_WIDTH * 300 / 1500,
-            y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-            x2: SVG_CONTAINER_WIDTH * 600 / 1500,
-            y2: SVG_CONTAINER_HEIGHT * 350 / 700
+            x1: 300,
+            y1: 350,
+            x2: 600,
+            y2: 350
         },
         sourceObject: {
-            x1: SVG_CONTAINER_WIDTH * 300 / 1500,
-            y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-            x2: SVG_CONTAINER_WIDTH * 300 / 1500,
-            y2: (SVG_CONTAINER_HEIGHT * 350 / 700) - SOURCE_HEIGHT_IN_PIXELS
+            x1: 300,
+            y1: 350,
+            x2: 300,
+            y2: 350 - SOURCE_HEIGHT_IN_PIXELS
         },
         midLinePosition: {
-            x1: SVG_CONTAINER_WIDTH * 600 / 1500,
-            y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-            x2: SVG_CONTAINER_WIDTH * 900 / 1500,
-            y2: SVG_CONTAINER_HEIGHT * 350 / 700
+            x1: 600,
+            y1: 350,
+            x2: 900,
+            y2: 350
         },
         midLineAnchorLeft: {
-            xAnchor: SVG_CONTAINER_WIDTH * 600 / 1500,
-            yAnchor: SVG_CONTAINER_HEIGHT * 350 / 700,
-            radius: SVG_CONTAINER_WIDTH * 6 / 1500
+            xAnchor: 600,
+            yAnchor: 350,
+            radius: 6
         },
         midLineAnchorRight: {
-            xAnchor: SVG_CONTAINER_WIDTH * 900 / 1500,
-            yAnchor: SVG_CONTAINER_HEIGHT * 350 / 700,
-            radius: SVG_CONTAINER_WIDTH * 6 / 1500
+            xAnchor: 900,
+            yAnchor: 350,
+            radius: 6
         },
         barrierPosition: {
-            x1: SVG_CONTAINER_WIDTH * 750 / 1500,
-            y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-            x2: SVG_CONTAINER_WIDTH * 750 / 1500,
-            y2: (SVG_CONTAINER_HEIGHT * 350 / 700) - BARRIER_HEIGHT_IN_PIXELS
+            x1: 750,
+            y1: 350,//- BARRIER_HEIGHT_IN_PIXELS,
+            x2: 750,
+            y2: 350 - BARRIER_HEIGHT_IN_PIXELS
+            // xCalc: 850
         },
         receiverLinePosition: {
-            x1: SVG_CONTAINER_WIDTH * 900 / 1500,
-            y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-            x2: SVG_CONTAINER_WIDTH * 1200 / 1500,
-            y2: SVG_CONTAINER_HEIGHT * 350 / 700
+            x1: 900,
+            y1: 350,
+            x2: 1200,
+            y2: 350
         },
         receiverSymbol: {
-            xAnchor: SVG_CONTAINER_WIDTH * 1200 / 1500,
-            yAnchor: (SVG_CONTAINER_HEIGHT * 350 / 700) - RECEIVER_HEIGHT_IN_PIXELS,
-            radius: SVG_CONTAINER_WIDTH * 10 / 1500
+            xAnchor: 1200,
+            yAnchor: 350 - RECEIVER_HEIGHT_IN_PIXELS,
+            radius: 10
         },
-        receiverSymbolPosition: {    // TO BE REMOVED
+        receiverSymbolPosition: {
             x: 0,
             y: 0
         },
         carPosition: {
-            xCar: SVG_CONTAINER_WIDTH * 200 / 1500,
-            yCar: SVG_CONTAINER_HEIGHT * 290 / 700
+            xCar: 200,
+            yCar: 290
         },
         housePosition: {
-            xHouse: SVG_CONTAINER_WIDTH * 1240 / 1500,
-            yHouse: SVG_CONTAINER_HEIGHT * 290 / 700
+            xHouse: 1240,
+            yHouse: 290
         },
         receiverObject: {   // Receiver object
-            x1: SVG_CONTAINER_WIDTH * 1200 / 1500,
-            y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-            x2: SVG_CONTAINER_WIDTH * 1200 / 1500,
-            y2: (SVG_CONTAINER_HEIGHT * 350 / 700) - RECEIVER_HEIGHT_IN_PIXELS
+            x1: 1200,
+            y1: 350,
+            x2: 1200,
+            y2: 350 - RECEIVER_HEIGHT_IN_PIXELS
         },
         sourceToInterceptLine: {
-            x1: SVG_CONTAINER_WIDTH * 300 / 1500,
-            y1: (SVG_CONTAINER_HEIGHT * 350 / 700) - SOURCE_HEIGHT_IN_PIXELS,
-            x2: SVG_CONTAINER_WIDTH * 1200 / 1500,
-            y2: (SVG_CONTAINER_HEIGHT * (350 - 50.4) / 700)
+            x1: 300,
+            y1: 350 - SOURCE_HEIGHT_IN_PIXELS,
+            x2: 1200,
+            y2: (350 - 50.4)
         },
         receiverToInterceptLine: {
-            x1: SVG_CONTAINER_WIDTH * 1200 / 1500,
-            y1: (SVG_CONTAINER_HEIGHT * 350 / 700) - RECEIVER_HEIGHT_IN_PIXELS,
-            x2: SVG_CONTAINER_WIDTH * 300 / 1500,
-            y2: SVG_CONTAINER_HEIGHT * (350 - 37.8) / 700
+            x1: 1200,
+            y1: 350 - RECEIVER_HEIGHT_IN_PIXELS,
+            x2: 300,
+            y2: (350 - 37.8)
         },
         groundSurface: {
-            x1: SVG_CONTAINER_WIDTH * 0 / 1500,
-            y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-            x2: SVG_CONTAINER_WIDTH * 600 / 1500,
-            y2: SVG_CONTAINER_HEIGHT * 350 / 700,
-            x3: SVG_CONTAINER_WIDTH * 900 / 1500,
-            y3: SVG_CONTAINER_HEIGHT * 350 / 700,
-            x4: SVG_CONTAINER_WIDTH * 1500 / 1500,
-            y4: SVG_CONTAINER_HEIGHT * 350 / 700,
-            x5: SVG_CONTAINER_WIDTH * 1500 / 1500,
-            y5: SVG_CONTAINER_HEIGHT * 700 / 700,
-            x6: SVG_CONTAINER_WIDTH * 0 / 1500,
-            y6: SVG_CONTAINER_HEIGHT * 700 / 700
+            x1: 0,
+            y1: 350,
+            x2: 600,
+            y2: 350,
+            x3: 900,
+            y3: 350,
+            x4: 1500,
+            y4: 350,
+            x5: 1500,
+            y5: 700,
+            x6: 0,
+            y6: 700
         },
+        barrierBoundLeft: 300,
+        barrierBoundRight: 300,
         barrierObjectPositionDelta: 0,
-        // barrierBoundLeft: 300,
-        // barrierBoundRight: 300,
-        // yReceiverCalc: 350,   // TO BE REMOVED
-        // yReceiverObjectCalc: 350 - RECEIVER_HEIGHT_IN_PIXELS, // TO BE REMOVED
+        yReceiverCalc: 350,
+        yReceiverObjectCalc: 350 - RECEIVER_HEIGHT_IN_PIXELS,
         inputValues:
         {
             roadSpeed: 50,
@@ -171,180 +171,6 @@ class Graphics extends React.Component {
 
     };
 
-    updateDimensions = () => {
-        let dim = $("#main-graph").width();
-        // if (dim < 990) {
-        //     SVG_CONTAINER_WIDTH = dim;
-        // } else {
-        //     SVG_CONTAINER_WIDTH = dim * 0.8;
-        // }
-        SVG_CONTAINER_WIDTH = dim * 0.95;
-        SVG_CONTAINER_HEIGHT = SVG_CONTAINER_WIDTH * 0.47;
-        
-        // SVG_CONTAINER_WIDTH = window.innerWidth * 0.7;
-        // SVG_CONTAINER_HEIGHT = window.innerWidth * 0.7 * 0.47;
-        
-        // SVG_CONTAINER_WIDTH = document.getElementById('main-graph').getBoundingClientRect().width;
-        // SVG_CONTAINER_HEIGHT = SVG_CONTAINER_WIDTH * 0.47;
-        SCALE_Y = 50 / (SVG_CONTAINER_WIDTH * 3 / 5); // 
-        SCALE_X = 50 / (SVG_CONTAINER_WIDTH * 3 / 5);
-        SOURCE_HEIGHT_IN_PIXELS = 0.8 / SCALE_Y;
-        BARRIER_HEIGHT_IN_PIXELS = 1.8 / SCALE_Y;
-        RECEIVER_HEIGHT_IN_PIXELS = 1.5 / SCALE_Y;
-        handleDragMidLineAnchorLeftX = SVG_CONTAINER_WIDTH * 600 / 1500; // 600
-        handleDragMidLineAnchorRightX = SVG_CONTAINER_WIDTH * 900 / 1500; // 900
-
-
-        this.setState({
-            canvasProps: {
-                canvasHeight: SVG_CONTAINER_HEIGHT,
-                canvasWidth: SVG_CONTAINER_WIDTH
-            },
-            labelLeftLimitLine: {
-                x1: SVG_CONTAINER_WIDTH * 0.2, // 300
-                y1: SVG_CONTAINER_HEIGHT * 0.5, // 350
-                x2: SVG_CONTAINER_WIDTH * 0.2, // 300
-                y2: SVG_CONTAINER_HEIGHT // 700
-            },
-            labelRightLimitLine: {
-                x1: SVG_CONTAINER_WIDTH * 4 / 5, // 1200
-                y1: SVG_CONTAINER_HEIGHT * 0.5, // 350,
-                x2: SVG_CONTAINER_WIDTH * 4 / 5,// 1200,
-                y2: SVG_CONTAINER_HEIGHT // 700
-            },
-            sourceToReceiverDistanceLabelLine: {
-                x1: SVG_CONTAINER_WIDTH * 1 / 5, //300,
-                y1: SVG_CONTAINER_HEIGHT * 4.8 / 5, //670,
-                x2: SVG_CONTAINER_WIDTH * 4 / 5, //1200,
-                y2: SVG_CONTAINER_HEIGHT * 4.8 / 5, //670
-            },
-            sourceToBarrierLabelHorizontalLine: {
-                x1: SVG_CONTAINER_WIDTH * 1 / 5, // 300,
-                y1: SVG_CONTAINER_HEIGHT * 4.6 / 5, // 610,
-                x2: SVG_CONTAINER_WIDTH * 1 / 2, // 750,
-                y2: SVG_CONTAINER_HEIGHT * 4.6 / 5, // 610
-            },
-            receiverToBarrierLabelHorizontalLine: {
-                x1: SVG_CONTAINER_WIDTH * 1 / 2, // 750,
-                y1: SVG_CONTAINER_HEIGHT * 4.6 / 5, // 610,
-                x2: SVG_CONTAINER_WIDTH * 4 / 5, // 1200,
-                y2: SVG_CONTAINER_HEIGHT * 4.6 / 5 // 610
-            },
-            sourceHeightTextPosition: {
-                x: SVG_CONTAINER_WIDTH * 80 / 1500,
-                y: SVG_CONTAINER_HEIGHT * 330 / 700
-            },
-            sourceLinePosition: {
-                x1: SVG_CONTAINER_WIDTH * 300 / 1500,
-                y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-                x2: SVG_CONTAINER_WIDTH * 600 / 1500,
-                y2: SVG_CONTAINER_HEIGHT * 350 / 700
-            },
-            sourceObject: {
-                x1: SVG_CONTAINER_WIDTH * 300 / 1500,
-                y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-                x2: SVG_CONTAINER_WIDTH * 300 / 1500,
-                y2: (SVG_CONTAINER_HEIGHT * 350 / 700) - SOURCE_HEIGHT_IN_PIXELS
-            },
-            midLinePosition: {
-                x1: SVG_CONTAINER_WIDTH * 600 / 1500,
-                y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-                x2: SVG_CONTAINER_WIDTH * 900 / 1500,
-                y2: SVG_CONTAINER_HEIGHT * 350 / 700
-            },
-            midLineAnchorLeft: {
-                xAnchor: SVG_CONTAINER_WIDTH * 600 / 1500,
-                yAnchor: SVG_CONTAINER_HEIGHT * 350 / 700,
-                radius: SVG_CONTAINER_WIDTH * 6 / 1500
-            },
-            midLineAnchorRight: {
-                xAnchor: SVG_CONTAINER_WIDTH * 900 / 1500,
-                yAnchor: SVG_CONTAINER_HEIGHT * 350 / 700,
-                radius: SVG_CONTAINER_WIDTH * 6 / 1500
-            },
-            barrierPosition: {
-                x1: SVG_CONTAINER_WIDTH * 750 / 1500,
-                y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-                x2: SVG_CONTAINER_WIDTH * 750 / 1500,
-                y2: (SVG_CONTAINER_HEIGHT * 350 / 700) - BARRIER_HEIGHT_IN_PIXELS
-            },
-            receiverLinePosition: {
-                x1: SVG_CONTAINER_WIDTH * 900 / 1500,
-                y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-                x2: SVG_CONTAINER_WIDTH * 1200 / 1500,
-                y2: SVG_CONTAINER_HEIGHT * 350 / 700
-            },
-            receiverSymbol: {
-                xAnchor: SVG_CONTAINER_WIDTH * 1200 / 1500,
-                yAnchor: (SVG_CONTAINER_HEIGHT * 350 / 700) - RECEIVER_HEIGHT_IN_PIXELS,
-                radius: SVG_CONTAINER_WIDTH * 10 / 1500
-            },
-            carPosition: {
-                xCar: SVG_CONTAINER_WIDTH * 200 / 1500,
-                yCar: SVG_CONTAINER_HEIGHT * 290 / 700
-            },
-            housePosition: {
-                xHouse: SVG_CONTAINER_WIDTH * 1240 / 1500,
-                yHouse: SVG_CONTAINER_HEIGHT * 290 / 700
-            },
-            receiverObject: {   // Receiver object
-                x1: SVG_CONTAINER_WIDTH * 1200 / 1500,
-                y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-                x2: SVG_CONTAINER_WIDTH * 1200 / 1500,
-                y2: (SVG_CONTAINER_HEIGHT * 350 / 700) - RECEIVER_HEIGHT_IN_PIXELS
-            },
-            sourceToInterceptLine: {
-                x1: SVG_CONTAINER_WIDTH * 300 / 1500,
-                y1: (SVG_CONTAINER_HEIGHT * 350 / 700) - SOURCE_HEIGHT_IN_PIXELS,
-                x2: SVG_CONTAINER_WIDTH * 1200 / 1500,
-                y2: (SVG_CONTAINER_HEIGHT * (350 - 50.4) / 700)
-            },
-            receiverToInterceptLine: {
-                x1: SVG_CONTAINER_WIDTH * 1200 / 1500,
-                y1: (SVG_CONTAINER_HEIGHT * 350 / 700) - RECEIVER_HEIGHT_IN_PIXELS,
-                x2: SVG_CONTAINER_WIDTH * 300 / 1500,
-                y2: SVG_CONTAINER_HEIGHT * (350 - 37.8) / 700
-            },
-            groundSurface: {
-                x1: SVG_CONTAINER_WIDTH * 0 / 1500,
-                y1: SVG_CONTAINER_HEIGHT * 350 / 700,
-                x2: SVG_CONTAINER_WIDTH * 600 / 1500,
-                y2: SVG_CONTAINER_HEIGHT * 350 / 700,
-                x3: SVG_CONTAINER_WIDTH * 900 / 1500,
-                y3: SVG_CONTAINER_HEIGHT * 350 / 700,
-                x4: SVG_CONTAINER_WIDTH * 1500 / 1500,
-                y4: SVG_CONTAINER_HEIGHT * 350 / 700,
-                x5: SVG_CONTAINER_WIDTH * 1500 / 1500,
-                y5: SVG_CONTAINER_HEIGHT * 700 / 700,
-                x6: SVG_CONTAINER_WIDTH * 0 / 1500,
-                y6: SVG_CONTAINER_HEIGHT * 700 / 700
-            },
-            inputValues:
-            {
-                roadSpeed: 50,
-                groundSurface: "Soft",
-                trafficVolume: 1000,
-                percentageOfHeavyTruck: 2.5,
-                roadWidth: 3.7,
-                roadGradient: 0,
-                distanceFromReceiverToIntersection: 151,
-                horizontalDistanceFromSourceToReceiver: 50,
-                targetSPL: 36,
-                barrierHeight: 1.8,
-                isBarrierChecked: false
-            }
-        });
-
-
-    };
-    componentDidMount() {
-        
-        window.addEventListener('resize', this.updateDimensions);
-        this.updateDimensions();
-    }
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.updateDimensions);
-    }
 
     setStateInputsFromInputForm = (inputFormState, eventID) => {
         if (inputFormState.horizontalDistanceFromSourceToReceiver == "" || inputFormState.horizontalDistanceFromSourceToReceiver == 0) {
@@ -364,13 +190,14 @@ class Graphics extends React.Component {
             // Adjust Scale
             SCALE_X = parseFloat(inputFormState.horizontalDistanceFromSourceToReceiver) / (this.state.receiverObject.x1 - this.state.sourceObject.x1);
             SCALE_Y = SCALE_X;
+            console.log("SCX", SCALE_X, inputFormState.horizontalDistanceFromSourceToReceiver);
             const currentBarrierHeight = (this.state.barrierPosition.y1 - this.state.barrierPosition.y2) * sy;
             const currentReceiverHeight = (this.state.receiverObject.y1 - this.state.receiverObject.y2) * sy;
             const currentSourceHeight = (this.state.sourceObject.y1 - this.state.sourceObject.y2) * sy;
-            // console.log("SCX", SCALE_X, inputFormState.horizontalDistanceFromSourceToReceiver);
-            // console.log("cbh", currentBarrierHeight);
-            // console.log("crh", currentReceiverHeight);
-            // console.log("height", (inputFormState.barrierHeight), this.state.barrierPosition.y1, SCALE_Y, sy, this.state.barrierPosition.y1 - (currentBarrierHeight) / SCALE_Y);
+            console.log("cbh", currentBarrierHeight);
+            console.log("crh", currentReceiverHeight);
+
+            console.log("height", (inputFormState.barrierHeight), this.state.barrierPosition.y1, SCALE_Y, sy, this.state.barrierPosition.y1 - (currentBarrierHeight) / SCALE_Y);
 
             sourceObject = {
                 x1: this.state.sourceObject.x1,
@@ -391,7 +218,7 @@ class Graphics extends React.Component {
                 x2: this.state.barrierPosition.x2,
                 y2: this.state.barrierPosition.y1 - (currentBarrierHeight / SCALE_Y)
             }
-
+            
             this.setState({
                 sourceObject: sourceObject,
                 receiverSymbol: {
@@ -411,7 +238,7 @@ class Graphics extends React.Component {
                 y2: this.state.sourceObject.y1 - (s / SCALE_Y)
             };
             this.setState({
-                sourceObject: sourceObject
+                sourceObject: sourceObject 
             });
 
         } else {
@@ -456,8 +283,7 @@ class Graphics extends React.Component {
     };
 
 
-    calculateSPLWithBarrier(roadSpeed, groundSurface, trafficVolume, percentageOfHeavyTruck, roadWidth, roadGradient,
-        distanceFromReceiverToIntersection, horizontalDistanceFromSourceToReceiver, barrierHeight,
+    calculateSPLWithBarrier(roadSpeed, groundSurface, trafficVolume, percentageOfHeavyTruck, roadWidth, roadGradient, distanceFromReceiverToIntersection, horizontalDistanceFromSourceToReceiver, barrierHeight,
         sourceObject, receiverObject, sourceLinePosition, receiverLinePosition, barrierPosition, calcSPL) {
 
         horizontalDistanceFromSourceToReceiver = parseFloat(horizontalDistanceFromSourceToReceiver);
@@ -507,48 +333,47 @@ class Graphics extends React.Component {
         const cal_correctionDistanceAndHeight = calculateCorrDistAndHeight(isGroundSurfaceSoft, cal_effectiveTotalHeight, horizontalDistanceFromSourceToReceiver);
         console.log("correction for distance and height", isGroundSurfaceSoft, horizontalDistanceFromSourceToReceiver, cal_correctionDistanceAndHeight);
 
-        let cal_SPLwithBarrier;
-        if (barrierHeight == 0) {
-            cal_SPLwithBarrier = cal_SPLat30m + cal_correctionRoadGradient + cal_correctionInterruptedTrafficFlow + cal_correctionDistanceAndHeight;
+        // STEP 7
+        const barrierPositionTemp = {
+            x1: barrierPosition.x1,
+            y1: barrierPosition.y1,
+            x2: barrierPosition.x2,
+            y2: tempBarrierY2
+        };
+        const sourceLineBreakingLOS = isBreakingLOS(sourceObject, receiverObject, sourceLinePosition);
+        const receiverLineBreakingLOS = isBreakingLOS(sourceObject, receiverObject, receiverLinePosition);
+        let barrierLineBreakingLOS;
+        let barrierInterruptsLOS;
+        let effectiveBarrierPosition
+
+
+
+        if (calcSPL) {
+            barrierLineBreakingLOS = isBreakingLOS(sourceObject, receiverObject, barrierPosition);
+            barrierInterruptsLOS = (sourceLineBreakingLOS == "true" || receiverLineBreakingLOS == "true" || barrierLineBreakingLOS == "true");
+            console.log("LOS", barrierInterruptsLOS);
+            effectiveBarrierPosition = calculateEffectiveBarrierPosition(sourceObject, receiverObject, sourceLinePosition, receiverLinePosition, barrierPosition);
+            console.log(effectiveBarrierPosition);
         } else {
-            // STEP 7
-            const barrierPositionTemp = {
-                x1: barrierPosition.x1,
-                y1: barrierPosition.y1,
-                x2: barrierPosition.x2,
-                y2: tempBarrierY2
-            };
-            const sourceLineBreakingLOS = isBreakingLOS(sourceObject, receiverObject, sourceLinePosition);
-            const receiverLineBreakingLOS = isBreakingLOS(sourceObject, receiverObject, receiverLinePosition);
-            let barrierLineBreakingLOS;
-            let barrierInterruptsLOS;
-            let effectiveBarrierPosition
-
-            if (calcSPL) {
-                barrierLineBreakingLOS = isBreakingLOS(sourceObject, receiverObject, barrierPosition);
-                barrierInterruptsLOS = (sourceLineBreakingLOS == "true" || receiverLineBreakingLOS == "true" || barrierLineBreakingLOS == "true");
-                console.log("LOS", barrierInterruptsLOS);
-                effectiveBarrierPosition = calculateEffectiveBarrierPosition(sourceObject, receiverObject, sourceLinePosition, receiverLinePosition, barrierPosition);
-                console.log(effectiveBarrierPosition);
-            } else {
-                barrierLineBreakingLOS = isBreakingLOS(sourceObject, receiverObject, barrierPositionTemp);
-                barrierInterruptsLOS = (sourceLineBreakingLOS == "true" || receiverLineBreakingLOS == "true" || barrierLineBreakingLOS == "true");
-                console.log("LOS", barrierInterruptsLOS);
-                effectiveBarrierPosition = calculateEffectiveBarrierPosition(sourceObject, receiverObject, sourceLinePosition, receiverLinePosition, barrierPositionTemp);
-                console.log(effectiveBarrierPosition);
-            }
-            const distSourceToBarrier = (effectiveBarrierPosition.x - sourceObject.x1) * SCALE_X;
-
-            const a = Math.sqrt(((sourceObject.y2 - effectiveBarrierPosition.y) * SCALE_Y) ** 2 + (distSourceToBarrier) ** 2);
-            const b = Math.sqrt(((receiverObject.y2 - effectiveBarrierPosition.y) * SCALE_Y) ** 2 + (horizontalDistanceFromSourceToReceiver - distSourceToBarrier) ** 2);
-            const c = Math.sqrt(((receiverObject.y2 - sourceObject.y2) * SCALE_Y) ** 2 + (horizontalDistanceFromSourceToReceiver) ** 2);
-            const pathLengthDifference = a + b - c;
-            // console.log(pathLengthDifference);
-            const cal_EffBarrierAtt = calculateEffBarrierAtt(barrierInterruptsLOS, pathLengthDifference, 100); // w is forcefully set to 100 to make the barrier of infinite length
-            console.log("Barrier Attenuation:", cal_EffBarrierAtt);
-
-            cal_SPLwithBarrier = cal_SPLat30m + cal_correctionRoadGradient + cal_correctionInterruptedTrafficFlow + cal_correctionDistanceAndHeight - cal_EffBarrierAtt;
+            barrierLineBreakingLOS = isBreakingLOS(sourceObject, receiverObject, barrierPositionTemp);
+            barrierInterruptsLOS = (sourceLineBreakingLOS == "true" || receiverLineBreakingLOS == "true" || barrierLineBreakingLOS == "true");
+            console.log("LOS", barrierInterruptsLOS);
+            effectiveBarrierPosition = calculateEffectiveBarrierPosition(sourceObject, receiverObject, sourceLinePosition, receiverLinePosition, barrierPositionTemp);
+            console.log(effectiveBarrierPosition);
         }
+
+        const distSourceToBarrier = (effectiveBarrierPosition.x - sourceObject.x1) * SCALE_X;
+
+        const a = Math.sqrt(((sourceObject.y2 - effectiveBarrierPosition.y) * SCALE_Y) ** 2 + (distSourceToBarrier) ** 2);
+        const b = Math.sqrt(((receiverObject.y2 - effectiveBarrierPosition.y) * SCALE_Y) ** 2 + (horizontalDistanceFromSourceToReceiver - distSourceToBarrier) ** 2);
+        const c = Math.sqrt(((receiverObject.y2 - sourceObject.y2) * SCALE_Y) ** 2 + (horizontalDistanceFromSourceToReceiver) ** 2);
+        const pathLengthDifference = a + b - c;
+        // console.log(pathLengthDifference);
+
+        const cal_EffBarrierAtt = calculateEffBarrierAtt(barrierInterruptsLOS, pathLengthDifference, 100); // w is forcefully set to 100 to make the barrier of infinite length
+        console.log("Barrier Attenuation:", cal_EffBarrierAtt);
+
+        const cal_SPLwithBarrier = cal_SPLat30m + cal_correctionRoadGradient + cal_correctionInterruptedTrafficFlow + cal_correctionDistanceAndHeight - cal_EffBarrierAtt;
 
         return cal_SPLwithBarrier;
     }
@@ -644,13 +469,11 @@ class Graphics extends React.Component {
     handleDrag = (e, ui) => {
         const { x1, y1, x2, y2 } = this.state.midLinePosition;
         const { x1: x1Barrier, y1: y1Barrier, x2: x2Barrier, y2: y2Barrier } = this.state.barrierPosition;
-        // const { x1: x1R, y1: y1R, x2: x2R, y2: y2R } = this.state.receiverLinePosition;
+        const { x1: x1R, y1: y1R, x2: x2R, y2: y2R } = this.state.receiverLinePosition;
         const { x1: x1ReceiverObject, y1: y1ReceiverObject, x2: x2ReceiverObject, y2: y2ReceiverObject } = this.state.receiverObject;
         const { xHouse, yHouse } = this.state.housePosition;
         const { xAnchor, yAnchor, radius } = this.state.receiverSymbol;
         const bb = Math.abs(y1Barrier - y2Barrier);
-
-        // console.log("HANDLEDRAG", ui.deltaY);
 
         let y1_New = (y1 +
             ((x1Barrier - x1) * ((y2 + ui.deltaY - y1)) / (x2 - x1)));
@@ -727,8 +550,8 @@ class Graphics extends React.Component {
                 yAnchor: this.state.midLineAnchorRight.yAnchor + ui.deltaY,
                 radius: this.state.midLineAnchorRight.radius
             },
-            // yReceiverCalc: y1R + ui.deltaY,
-            // yReceiverObjectCalc: y2ReceiverObject + ui.deltaY,
+            yReceiverCalc: y1R + ui.deltaY,
+            yReceiverObjectCalc: y2ReceiverObject + ui.deltaY,
             receiverObject,
             housePosition: {
                 xHouse,
@@ -762,7 +585,6 @@ class Graphics extends React.Component {
     // }
 
     handleDragOnStop = (e, ui) => {
-        console.log("AFTERSTOP", ui.y);
         const receiverLinePosition = {
             x1: this.state.receiverLinePosition.x1,
             y1: this.state.receiverLinePosition.y1 + ui.y,
@@ -796,7 +618,7 @@ class Graphics extends React.Component {
                 x2: this.state.receiverToInterceptLine.x2,
                 y2: extrapolateLine(this.state.receiverToInterceptLine.x1, receiverObject.y2, q.x, q.y, this.state.receiverToInterceptLine.x2)
             },
-            // yReceiverObjectCalc: this.state.yReceiverObjectCalc + ui.deltaY
+            yReceiverObjectCalc: this.state.yReceiverObjectCalc + ui.deltaY
         });
     }
 
@@ -1019,13 +841,7 @@ class Graphics extends React.Component {
     }
     handleDragMidLineAnchorLeftOnStop = (e, ui) => {
         handleDragMidLineAnchorLeftX = handleDragMidLineAnchorLeftX + ui.x;
-        this.setState({
-            midLineAnchorLeft: {
-                xAnchor: this.state.midLineAnchorLeft.xAnchor + ui.x,
-                yAnchor: this.state.midLineAnchorLeft.yAnchor,
-                radius: this.state.midLineAnchorLeft.radius
-            }
-        });
+        
         const res = this.runBarrierCalc(this.state.inputValues, this.state.sourceObject, this.state.receiverObject, this.state.sourceLinePosition, this.state.receiverLinePosition, this.state.barrierPosition);
         this.setState(res);
     }
@@ -1115,84 +931,38 @@ class Graphics extends React.Component {
     }
     handleDragMidLineAnchorRightOnStop = (e, ui) => {
         handleDragMidLineAnchorRightX = handleDragMidLineAnchorRightX + ui.x;
-        this.setState({
-            midLineAnchorRight: {
-                xAnchor: this.state.midLineAnchorRight.xAnchor + ui.x,
-                yAnchor: this.state.midLineAnchorRight.yAnchor,
-                radius: this.state.midLineAnchorRight.radius
-            }
-        });
+        
         const res = this.runBarrierCalc(this.state.inputValues, this.state.sourceObject, this.state.receiverObject, this.state.sourceLinePosition, this.state.receiverLinePosition, this.state.barrierPosition);
         this.setState(res);
     }
 
-    setBoundBarrierPosition = (side) => {
-        let bound;
-        if (side == 'left') {
-            bound = (this.state.barrierPosition.x1 - this.state.sourceObject.x1) * SCALE_X <= 2.0 ? 0 : -(this.state.barrierPosition.x1 - this.state.sourceObject.x1 - 2.0 / SCALE_X);
-        } else {
-            bound = (this.state.receiverObject.x1 - this.state.barrierPosition.x1) * SCALE_X <= 4.0 ? 0 : (this.state.receiverObject.x1 - this.state.barrierPosition.x1 - 4.0 / SCALE_X);
-        }
-        return bound;
+    displayEffetiveBarrierLocation = () => {
+        const { x, y } = calculateEffectiveBarrierPosition(this.state.sourceObject, this.state.receiverObject, this.state.sourceLinePosition, this.state.receiverLinePosition, this.state.barrierPosition);
+        return "x: ".concat(x, " and y: ", y)
     }
-
-    setBoundReceiverSymbol = (side) => {
-        let bound;
-        if (side == 'top') {
-            console.log("UPPPP", (this.state.receiverObject.y1 - this.state.receiverObject.y2) * SCALE_Y);
-            bound = (this.state.receiverObject.y1 - this.state.receiverObject.y2) * SCALE_Y > 20.0 ? 0 : -(1000);
-        } else {
-            // console.log("DOWN ", (this.state.receiverLinePosition.y2 - this.state.receiverSymbol.yAnchor) * SCALE_Y, (this.state.receiverLinePosition.y2 - this.state.receiverSymbol.yAnchor - 1.5 / SCALE_Y));
-
-            // bound = (this.state.receiverObject.y1 - this.state.receiverObject.y2) * SCALE_Y <= 1.5 ? 0 : (this.state.receiverObject.y1 - this.state.receiverObject.y2 + 1.5 / SCALE_Y);
-            bound = (this.state.receiverLinePosition.y2 - this.state.receiverSymbol.yAnchor) * SCALE_Y <= 1.5 ? 0 : (this.state.receiverLinePosition.y2 - this.state.receiverSymbol.yAnchor - 1.5 / SCALE_Y);
-
-        }
-        return bound;
-    }
-
-    setBoundReceiverLinePosition = (side) => {
-        
-        let bound;
-        if (side == 'top') {
-            console.log("TOPPPP", (SVG_CONTAINER_HEIGHT * 0.05));
-            bound = this.state.receiverLinePosition.y1 <= (SVG_CONTAINER_HEIGHT * 0.05) ? 0 : ((SVG_CONTAINER_HEIGHT * 0.05) - this.state.receiverLinePosition.y1);
-        } else if (side == 'bottom') {
-            bound = this.state.receiverLinePosition.y1 >= (SVG_CONTAINER_HEIGHT * 0.95) ? 0 : ((SVG_CONTAINER_HEIGHT * 0.95) - this.state.receiverLinePosition.y1);
-        }
-        return bound;
-    }
-
-    // displayEffetiveBarrierLocation = () => {     // TO BE REMOVED
-    //     const { x, y } = calculateEffectiveBarrierPosition(this.state.sourceObject, this.state.receiverObject, this.state.sourceLinePosition, this.state.receiverLinePosition, this.state.barrierPosition);
-    //     return "x: ".concat(x, " and y: ", y)
-    // }
     displayGroundSurface = () => {
         return this.state.groundSurface.x1.toString().concat(",", this.state.groundSurface.y1, ",", this.state.groundSurface.x2, ",", this.state.groundSurface.y2, ",", this.state.groundSurface.x3, ",", this.state.groundSurface.y3,
             ",", this.state.groundSurface.x4, ",", this.state.groundSurface.y4, ",", this.state.groundSurface.x5, ",", this.state.groundSurface.y5, ",", this.state.groundSurface.x6, ",", this.state.groundSurface.y6);
     }
 
     render() {
-        
         return (
-            <div className="container">
+            <div className="">
                 <div className="row">
-                    
-                    <div className="d-flex col justify-content-center mb-2" id="main-graph">
+                    <div className="col">
 
-                        {
-                            //     <img src="./car.png" style={{
-                            //     position: 'absolute',
-                            //     left: this.state.carPosition.xCar,
-                            //     top: this.state.carPosition.yCar
-                            // }} className="img-fluid App-logo " alt="logo" />
+                        <img src="./car.png" style={{
+                            position: 'absolute',
+                            left: this.state.carPosition.xCar,
+                            top: this.state.carPosition.yCar
+                        }} className="App-logo" alt="logo" />
 
-                            // <img src="./home.png" style={{
-                            //     position: 'absolute',
-                            //     left: this.state.housePosition.xHouse,
-                            //     top: this.state.housePosition.yHouse
-                            // }} className="App-logo" alt="logo" />
-                        }
+                        <img src="./home.png" style={{
+                            position: 'absolute',
+                            left: this.state.housePosition.xHouse,
+                            top: this.state.housePosition.yHouse
+                        }} className="App-logo" alt="logo" />
+
 
                         <svg height={this.state.canvasProps.canvasHeight} width={this.state.canvasProps.canvasWidth} className="svgArea">
                             <defs>
@@ -1213,276 +983,136 @@ class Graphics extends React.Component {
                                 </marker>
                             </defs>
 
-                            
-                            {/* Ground Surface Area */}
-                            <polygon
-                                className="groundSurface"
-                                points={this.displayGroundSurface()}
-                            />
+                            <polygon className="groundSurface" points={this.displayGroundSurface()} />
 
                             {/* Left Vertical Line for Label */}
-                            <line
-                                className="float-source source-plane interceptLine"
-                                x1={this.state.labelLeftLimitLine.x1}
-                                y1={this.state.labelLeftLimitLine.y1}
-                                x2={this.state.labelLeftLimitLine.x2}
-                                y2={this.state.labelLeftLimitLine.y2}
-                            />
+                            <line className="float-source source-plane interceptLine" x1={this.state.labelLeftLimitLine.x1}
+                                y1={this.state.labelLeftLimitLine.y1} x2={this.state.labelLeftLimitLine.x2}
+                                y2={this.state.labelLeftLimitLine.y2} />
 
                             {/* Right Vertical Line for Label */}
-                            <line
-                                className="float-source source-plane interceptLine"
-                                x1={this.state.labelRightLimitLine.x1}
-                                y1={this.state.labelRightLimitLine.y1}
-                                x2={this.state.labelRightLimitLine.x2}
-                                y2={this.state.labelRightLimitLine.y2}
-                            />
+                            <line className="float-source source-plane interceptLine" x1={this.state.labelRightLimitLine.x1}
+                                y1={this.state.labelRightLimitLine.y1} x2={this.state.labelRightLimitLine.x2}
+                                y2={this.state.labelRightLimitLine.y2} />
 
-                            {/* Source to Receiver Distance - Horizontal Line and Label */}
-                            <line
-                                className="float-source source-plane interceptLine"
-                                x1={this.state.sourceToReceiverDistanceLabelLine.x1}
-                                y1={this.state.sourceToReceiverDistanceLabelLine.y1}
-                                x2={this.state.sourceToReceiverDistanceLabelLine.x2 - 16}
-                                y2={this.state.sourceToReceiverDistanceLabelLine.y2}
-                                markerStart="url(#arrowLeft)"
-                                markerEnd="url(#arrowRight)"
-                            />
+                            {/* Source to Receiver Label Horizontal Line and Label */}
+                            <line className="float-source source-plane interceptLine" x1={this.state.sourceToReceiverDistanceLabelLine.x1}
+                                y1={this.state.sourceToReceiverDistanceLabelLine.y1} x2={this.state.sourceToReceiverDistanceLabelLine.x2 - 16}
+                                y2={this.state.sourceToReceiverDistanceLabelLine.y2} markerStart="url(#arrowLeft)" markerEnd="url(#arrowRight)" />
 
-                            <text className="svgText"
-
-                                x={(this.state.sourceToReceiverDistanceLabelLine.x1 + this.state.sourceToReceiverDistanceLabelLine.x2) / 2}
-                                y={this.state.sourceToReceiverDistanceLabelLine.y2 + 15}
-                            >
-                                {parseFloat(this.state.inputValues.horizontalDistanceFromSourceToReceiver).toFixed(1)} m
-                            </text>
+                            <text className="svgText" x={(this.state.sourceToReceiverDistanceLabelLine.x1 + this.state.sourceToReceiverDistanceLabelLine.x2) / 2} y={this.state.sourceToReceiverDistanceLabelLine.y2 + 15}>
+                                {parseFloat(this.state.inputValues.horizontalDistanceFromSourceToReceiver).toFixed(1)} m </text>
 
                             {/* Source to Barrier Label Horizontal Line and Label */}
-                            <line
-                                className="float-source source-plane interceptLine"
-                                x1={this.state.sourceToBarrierLabelHorizontalLine.x1}
-                                y1={this.state.sourceToBarrierLabelHorizontalLine.y1}
-                                x2={this.state.sourceToBarrierLabelHorizontalLine.x2}
-                                y2={this.state.sourceToBarrierLabelHorizontalLine.y2}
-                                markerStart="url(#arrowLeft)"
-                                markerEnd="url(#arrowRight)"
-                            />
+                            <line className="float-source source-plane interceptLine" x1={this.state.sourceToBarrierLabelHorizontalLine.x1}
+                                y1={this.state.sourceToBarrierLabelHorizontalLine.y1} x2={this.state.sourceToBarrierLabelHorizontalLine.x2 - 16}
+                                y2={this.state.sourceToBarrierLabelHorizontalLine.y2} markerStart="url(#arrowLeft)" markerEnd="url(#arrowRight)" />
 
-                            <text
-                                className="svgText"
-                                x={(this.state.sourceToBarrierLabelHorizontalLine.x1 + this.state.sourceToBarrierLabelHorizontalLine.x2) / 2}
-                                y={this.state.sourceToBarrierLabelHorizontalLine.y1 + 15}
-                            >
-                                {((this.state.barrierPosition.x1 + this.state.barrierObjectPositionDelta - this.state.sourceLinePosition.x1) * this.state.inputValues.horizontalDistanceFromSourceToReceiver / (this.state.receiverObject.x1 - this.state.sourceObject.x1)).toFixed(1)} m
-                            </text>
+                            <text className="svgText" x={(this.state.sourceToBarrierLabelHorizontalLine.x1 + this.state.sourceToBarrierLabelHorizontalLine.x2) / 2} y={this.state.sourceToBarrierLabelHorizontalLine.y1 + 15}>
+                                {((this.state.barrierPosition.x1 + this.state.barrierObjectPositionDelta - this.state.sourceLinePosition.x1) * this.state.inputValues.horizontalDistanceFromSourceToReceiver / (this.state.receiverObject.x1 - this.state.sourceObject.x1)).toFixed(1)} m </text>
 
                             {/* Receiver to Barrier Label Horizontal Line and Label */}
-                            <line
-                                className="float-source source-plane interceptLine"
-                                x1={this.state.receiverToBarrierLabelHorizontalLine.x1}
-                                y1={this.state.receiverToBarrierLabelHorizontalLine.y1}
-                                x2={this.state.receiverToBarrierLabelHorizontalLine.x2 - 16}
-                                y2={this.state.receiverToBarrierLabelHorizontalLine.y2}
-                                markerStart="url(#arrowLeft)"
-                                markerEnd="url(#arrowRight)"
-                            />
+                            <line className="float-source source-plane interceptLine" x1={this.state.receiverToBarrierLabelHorizontalLine.x1}
+                                y1={this.state.receiverToBarrierLabelHorizontalLine.y1} x2={this.state.receiverToBarrierLabelHorizontalLine.x2 - 16}
+                                y2={this.state.receiverToBarrierLabelHorizontalLine.y2} markerStart="url(#arrowLeft)" markerEnd="url(#arrowRight)" />
 
-                            <text
-                                className="svgText"
-                                x={(this.state.receiverToBarrierLabelHorizontalLine.x1 + this.state.receiverToBarrierLabelHorizontalLine.x2) / 2}
-                                y={this.state.receiverToBarrierLabelHorizontalLine.y1 + 15}
-                            >
+                            <text className="svgText" x={(this.state.receiverToBarrierLabelHorizontalLine.x1 + this.state.receiverToBarrierLabelHorizontalLine.x2) / 2} y={this.state.receiverToBarrierLabelHorizontalLine.y1 + 15}>
                                 {(parseFloat(this.state.inputValues.horizontalDistanceFromSourceToReceiver) -
-                                    ((this.state.barrierPosition.x1 + this.state.barrierObjectPositionDelta - this.state.sourceLinePosition.x1) * this.state.inputValues.horizontalDistanceFromSourceToReceiver / (this.state.receiverObject.x1 - this.state.sourceObject.x1))).toFixed(1)} m
-                            </text>
-
+                                    ((this.state.barrierPosition.x1 + this.state.barrierObjectPositionDelta - this.state.sourceLinePosition.x1) * this.state.inputValues.horizontalDistanceFromSourceToReceiver / (this.state.receiverObject.x1 - this.state.sourceObject.x1))).toFixed(1)} m </text>
+                            
                             {/* Source to MidLineAnchorLeft Horizontal Line and Label */}
-                            <line
-                                className="float-source source-plane"
-                                x1={this.state.sourceObject.x1}
-                                y1={this.state.sourceObject.y1 + 12}
-                                x2={this.state.midLinePosition.x1 - 8}
-                                y2={this.state.midLinePosition.y1 + 12}
-                                markerStart="url(#arrowLeftSmall)"
-                                markerEnd="url(#arrowRightSmall)"
-                            />
+                            <line className="float-source source-plane " x1={this.state.sourceObject.x1}
+                            y1={this.state.sourceObject.y1 + 12} x2={this.state.midLinePosition.x1 - 8}
+                            y2={this.state.midLinePosition.y1 + 12} markerStart="url(#arrowLeftSmall)" markerEnd="url(#arrowRightSmall)" />
 
-                            <text
-                                className="svgTextSmall"
-                                x={(this.state.sourceLinePosition.x1 + this.state.sourceLinePosition.x2) / 2}
-                                y={this.state.sourceLinePosition.y1 + 22}
-                            >
-                                {((this.state.midLinePosition.x1 - this.state.sourceObject.x1) * SCALE_X).toFixed(1)} m
-                            </text>
+                            <text className="svgTextSmall" x={(this.state.sourceLinePosition.x1 + this.state.sourceLinePosition.x2) / 2} y={this.state.sourceLinePosition.y1 + 22}>
+                            {((this.state.midLinePosition.x1 - this.state.sourceObject.x1) * SCALE_X).toFixed(1)} m </text>
 
-                            {/* Receiver to MidLineAnchorRight Horizontal Line and Label */}
-                            <line
-                                className="float-source source-plane"
-                                x1={this.state.midLinePosition.x2}
-                                y1={this.state.receiverObject.y1 + 12}
-                                x2={this.state.receiverObject.x1 - 8}
-                                y2={this.state.receiverObject.y1 + 12}
-                                markerStart="url(#arrowLeftSmall)"
-                                markerEnd="url(#arrowRightSmall)"
-                            />
+                           
+                            {/* Source to MidLineAnchorRight Horizontal Line and Label */}
+                            <line className="float-source source-plane " x1={this.state.midLinePosition.x2}
+                            y1={this.state.receiverObject.y1 + 12} x2={this.state.receiverObject.x1 - 8}
+                            y2={this.state.receiverObject.y1 + 12} markerStart="url(#arrowLeftSmall)" markerEnd="url(#arrowRightSmall)" />
 
-                            <text
-                                className="svgTextSmall"
-                                x={(this.state.receiverLinePosition.x1 + this.state.receiverLinePosition.x2) / 2}
-                                y={this.state.receiverObject.y1 + 22}
-                            >
-                                {((this.state.receiverObject.x1 - this.state.midLinePosition.x2) * SCALE_X).toFixed(1)} m
-                            </text>
-
+                            <text className="svgTextSmall" x={(this.state.receiverLinePosition.x1 + this.state.receiverLinePosition.x2) / 2} y={this.state.receiverObject.y1 + 22}>
+                            {((this.state.receiverObject.x1 - this.state.midLinePosition.x2) * SCALE_X).toFixed(1)} m </text>
+                        
                             {/* Vertical Distance between SourcePlane and ReceiverPlane Line and Label */}
                             {this.state.receiverObject.y1 == this.state.sourceLinePosition.y1 ? null : (
-                                <line
-                                    className="float-source source-plane interceptLine"
-                                    x1={this.state.receiverObject.x1 + 220 * SVG_CONTAINER_WIDTH / 1500}
-                                    y1={this.state.sourceObject.y1}
-                                    x2={this.state.receiverObject.x1 + 220 * SVG_CONTAINER_HEIGHT / 700}
-                                    y2={this.state.receiverObject.y1 - 8}
-                                    markerStart="url(#arrowLeftSmall)"
-                                    markerEnd="url(#arrowRightSmall)"
-                                />
+                                <line className="float-source source-plane interceptLine" x1={this.state.receiverObject.x1 + 220}
+                                y1={this.state.sourceObject.y1} x2={this.state.receiverObject.x1 + 220}
+                                y2={this.state.receiverObject.y1 - 8} markerStart="url(#arrowLeftSmall)" markerEnd="url(#arrowRightSmall)" />
                             )}
 
                             {this.state.receiverObject.y1 == this.state.sourceLinePosition.y1 ? null : (
-                                <text
-                                    className="svgTextSmall"
-                                    x={this.state.receiverObject.x1 + 235 * SVG_CONTAINER_WIDTH / 1500}
-                                    y={(this.state.sourceLinePosition.y1 + this.state.receiverObject.y1) / 2}
-                                >
+                                <text className="svgTextSmall" x={this.state.receiverObject.x1 + 235} y={(this.state.sourceLinePosition.y1 + this.state.receiverObject.y1) / 2}>
                                     {(Math.abs(this.state.receiverObject.y1 - this.state.sourceLinePosition.y1) * SCALE_Y).toFixed(1)} m
                                 </text>
                             )}
 
                             {/* Source Height Label */}
-                            <text
-                                className="svgText"
-                                data-toggle="tooltip"
-                                data-placement="bottom"
-                                title="Equivalent source height from road surface. 
-                                There are two major sources of noise from
-                                moving motor vehicles: the engine-exhaust
-                                system and the tire-roadway interaction. Equivalent source height
-                                is dependent on vehicle speed and percentage of heavy truck on the road. 
-                                "
-                                x={this.state.sourceHeightTextPosition.x}
-                                y={this.state.sourceHeightTextPosition.y}
-                            >
-                                hs = {((this.state.sourceObject.y1 - this.state.sourceObject.y2) * SCALE_Y).toFixed(1)} m
-                            </text>
+                            <text className="svgText" x={this.state.sourceHeightTextPosition.x} y={this.state.sourceHeightTextPosition.y}>
+                                hs = {((this.state.sourceObject.y1 - this.state.sourceObject.y2) * SCALE_Y).toFixed(1)} m </text>
 
                             {/* Receiver Height Label */}
-                            <text
-                                className="svgText"
-                                data-toggle="tooltip"
-                                data-placement="bottom"
-                                title="Receiver height from ground"
-                                x={this.state.receiverObject.x1 + 120 * SVG_CONTAINER_WIDTH / 1500}
-                                y={(this.state.receiverObject.y1 + this.state.receiverObject.y2) / 2}
-                            >
-                                hr = {((this.state.receiverObject.y1 - this.state.receiverObject.y2) * SCALE_Y).toFixed(1)} m
-                            </text>
+                            <text className="svgText" x={this.state.receiverObject.x1 + 120} y={(this.state.receiverObject.y1 + this.state.receiverObject.y2) / 2}>
+                                hr = {((this.state.receiverObject.y1 - this.state.receiverObject.y2) * SCALE_Y).toFixed(1)} m </text>
 
                             {/* Barrier Height Label */}
-                            <text
-                                className="svgText"
-                                data-toggle="tooltip"
-                                data-placement="bottom"
-                                title="Barrier height from ground"
-                                x={this.state.barrierPosition.x1 + this.state.barrierObjectPositionDelta + 10}
-                                y={(this.state.barrierPosition.y1 + this.state.barrierPosition.y2) / 2}
-                            >
-                                hb = {((this.state.barrierPosition.y1 - this.state.barrierPosition.y2) * SCALE_Y).toFixed(1)} m
-                            </text>
-
+                            <text className="svgText" x={this.state.barrierPosition.x1 + this.state.barrierObjectPositionDelta + 10} y={(this.state.barrierPosition.y1 + this.state.barrierPosition.y2) / 2}>
+                                hb = {((this.state.barrierPosition.y1 - this.state.barrierPosition.y2) * SCALE_Y).toFixed(1)} m </text>
+                            
                             {/* Road Center Line Label */}
-                            <text
-                                className="d-none d-md-block verticalTextUp svgTextMedium"
-                                x={this.state.sourceObject.x1 - 15}
-                                y={this.state.sourceObject.y1 + 30}
-                            >
-                                Road Center Line
-                            </text>
+                            <text className="verticalTextUp svgTextMedium" x={this.state.sourceObject.x1 - 15} y={this.state.sourceObject.y1}>
+                            Road Center Line Position</text>
+                            
+                            <line className="float-source interceptLine interceptLineSource" x1={this.state.sourceToInterceptLine.x1}
+                                y1={this.state.sourceToInterceptLine.y1} x2={this.state.sourceToInterceptLine.x2}
+                                y2={this.state.sourceToInterceptLine.y2} />
 
-                            {/* First Intercept Line from Source*/}
-                            <line
-                                className="float-source interceptLine interceptLineSource"
-                                x1={this.state.sourceToInterceptLine.x1}
-                                y1={this.state.sourceToInterceptLine.y1}
-                                x2={this.state.sourceToInterceptLine.x2}
-                                y2={this.state.sourceToInterceptLine.y2}
-                            />
+                            <line className="float-source source-plane interceptLine" x1={this.state.receiverToInterceptLine.x1}
+                                y1={this.state.receiverToInterceptLine.y1} x2={this.state.receiverToInterceptLine.x2}
+                                y2={this.state.receiverToInterceptLine.y2} />
 
-                            {/* First Intercept Line from Receiver*/}
-                            <line
-                                className="float-source source-plane interceptLine"
-                                x1={this.state.receiverToInterceptLine.x1}
-                                y1={this.state.receiverToInterceptLine.y1}
-                                x2={this.state.receiverToInterceptLine.x2}
-                                y2={this.state.receiverToInterceptLine.y2}
-                            />
+                            <line className="float-source source-plane plane" x1={this.state.sourceLinePosition.x1}
+                                y1={this.state.sourceLinePosition.y1} x2={this.state.sourceLinePosition.x2}
+                                y2={this.state.sourceLinePosition.y2} />
 
-                            {/* Source Plane*/}
-                            <line
-                                className="float-source source-plane plane"
-                                x1={this.state.sourceLinePosition.x1}
-                                y1={this.state.sourceLinePosition.y1}
-                                x2={this.state.sourceLinePosition.x2}
-                                y2={this.state.sourceLinePosition.y2}
-                            />
+                            <line className="plane source-plane" x1={this.state.sourceObject.x1}
+                                y1={this.state.sourceObject.y1} x2={this.state.sourceObject.x2}
+                                y2={this.state.sourceObject.y2} />
 
-                            {/* Source Object (Vertical Line)*/}
-                            <line
-                                className="plane source-plane"
-                                x1={this.state.sourceObject.x1}
-                                y1={this.state.sourceObject.y1}
-                                x2={this.state.sourceObject.x2}
-                                y2={this.state.sourceObject.y2}
-                            />
+                            <line className="float-source" x1={this.state.midLinePosition.x1}
+                                y1={this.state.midLinePosition.y1} x2={this.state.midLinePosition.x2}
+                                y2={this.state.midLinePosition.y2} className="plane middle-plane" />
 
-                            {/* Mid Plane*/}
-                            <line
-                                className="float-source plane middle-plane"
-                                x1={this.state.midLinePosition.x1}
-                                y1={this.state.midLinePosition.y1}
-                                x2={this.state.midLinePosition.x2}
-                                y2={this.state.midLinePosition.y2}
-                                className="plane middle-plane"
-                            />
-
-                            {/* Mid Line Left Anchor*/}
                             <Draggable
                                 axis="x"
                                 handle=".handleMidLineAnchorLeft"
                                 grid={[1, 1]}
                                 scale={1}
-                                position={{ x: 0, y: 0 }}
                                 onStart={this.handleDragMidLineAnchorLeftOnStart}
                                 onDrag={this.handleDragMidLineAnchorLeft}
                                 onStop={this.handleDragMidLineAnchorLeftOnStop}
-                                bounds={{
-                                    top: 0,
-                                    left: -290 * SVG_CONTAINER_WIDTH / 1500,
-                                    right: handleDragMidLineAnchorRightX - handleDragMidLineAnchorLeftX - (50 * SVG_CONTAINER_WIDTH / 1500),
-                                    bottom: 0
-                                }}
-                            >
-                                <circle
-                                    className="handleMidLineAnchorLeft plane source-plane"
-                                    cx={this.state.midLineAnchorLeft.xAnchor}
-                                    cy={this.state.midLineAnchorLeft.yAnchor}
-                                    r={this.state.midLineAnchorLeft.radius}
-                                    fill="blue"
-                                    data-toggle="tooltip"
-                                    data-placement="bottom"
-                                    title="Drag this anchor horizontally to adjust source plane length"
-                                />
+                                bounds={{ top: 0, left: -290, right: handleDragMidLineAnchorRightX - handleDragMidLineAnchorLeftX - 50, bottom: 0 }}>
+                                <circle className="handleMidLineAnchorLeft plane source-plane" cx={this.state.midLineAnchorLeft.xAnchor} cy={this.state.midLineAnchorLeft.yAnchor}
+                                    r={this.state.midLineAnchorLeft.radius} fill="green" />
                             </Draggable>
 
-                            {/* Barrier Line (Vertical Line)*/}
+                            <Draggable
+                                axis="x"
+                                handle=".handleMidLineAnchorRight"
+                                grid={[1, 1]}
+                                scale={1}
+                                onStart={this.handleDragMidLineAnchorRightOnStart}
+                                onDrag={this.handleDragMidLineAnchorRight}
+                                onStop={this.handleDragMidLineAnchorRightOnStop}
+                                bounds={{ top: 0, left: -(handleDragMidLineAnchorRightX - handleDragMidLineAnchorLeftX - 50), right: 290, bottom: 0 }}>
+                                <circle className="handleMidLineAnchorRight plane source-plane" cx={this.state.midLineAnchorRight.xAnchor} cy={this.state.midLineAnchorRight.yAnchor}
+                                    r={this.state.midLineAnchorLeft.radius} fill="red" />
+                            </Draggable>
+
+
                             <Draggable
                                 axis="x"
                                 handle=".handle3"
@@ -1494,24 +1124,16 @@ class Graphics extends React.Component {
                                 position={{ x: 0, y: 0 }}
                                 bounds={{
                                     top: 0,
-                                    left: this.setBoundBarrierPosition('left'),
-                                    right: this.setBoundBarrierPosition('right'),
+                                    left: this.state.barrierPosition.x1 <= 320 ? 0 : (320 - this.state.barrierPosition.x1),
+                                    right: this.state.barrierPosition.x1 >= 1180 ? 0 : (1180 - this.state.barrierPosition.x1),
                                     bottom: 0
                                 }}
                             >
-                                <line
-                                    className="handle3 plane source-plane"
-                                    x1={this.state.barrierPosition.x1}
-                                    y1={this.state.barrierPosition.y1}
-                                    x2={this.state.barrierPosition.x2}
-                                    y2={this.state.barrierPosition.y2}
-                                    data-toggle="tooltip"
-                                    data-placement="bottom"
-                                    title="Drag this line horizontally to set the desired location of the noise barrier"
-                                />
+                                <line className="handle3 plane source-plane" x1={this.state.barrierPosition.x1}
+                                    y1={this.state.barrierPosition.y1} x2={this.state.barrierPosition.x2}
+                                    y2={this.state.barrierPosition.y2} />
                             </Draggable>
 
-                            {/* Receiver Plane*/}
                             <Draggable
                                 axis="y"
                                 handle=".handle2"
@@ -1522,65 +1144,18 @@ class Graphics extends React.Component {
                                 onStop={this.handleDragOnStop}
                                 position={{ x: 0, y: 0 }}
                                 bounds={{
-                                    top: this.setBoundReceiverLinePosition('top'),
+                                    top: this.state.receiverLinePosition.y1 <= 125 ? 0 : (125 - this.state.receiverLinePosition.y1),
                                     left: 0,
                                     right: 0,
-                                    bottom: this.setBoundReceiverLinePosition('bottom')
+                                    bottom: this.state.receiverLinePosition.y1 >= 575 ? 0 : (575 - this.state.receiverLinePosition.y1)
                                 }}
                             >
-                                <line
-                                    className="handle2 float-source plane receiver-plane"
-                                    x1={this.state.receiverLinePosition.x1}
-                                    y1={this.state.receiverLinePosition.y1}
-                                    x2={this.state.receiverLinePosition.x2}
-                                    y2={this.state.receiverLinePosition.y2}
-                                    // data-toggle="popover"
-                                    // data-placement="bottom"
-                                    // title="Drag this line vertically to adjust the elevation of receiver plane relative to the source plane"
-                                />
-                            </Draggable>
-                            
-                            {/* Mid Line Right Anchor*/}
-                            <Draggable
-                                axis="x"
-                                handle=".handleMidLineAnchorRight"
-                                grid={[1, 1]}
-                                scale={1}
-                                onStart={this.handleDragMidLineAnchorRightOnStart}
-                                onDrag={this.handleDragMidLineAnchorRight}
-                                onStop={this.handleDragMidLineAnchorRightOnStop}
-                                position={{ x: 0, y: 0 }}
-                                bounds={{
-                                    top: 0,
-                                    left: -(handleDragMidLineAnchorRightX - handleDragMidLineAnchorLeftX - (50 * SVG_CONTAINER_WIDTH / 1500)),
-                                    right: 290 * SVG_CONTAINER_WIDTH / 1500,
-                                    bottom: 0
-                                }}
-                            >
-                                <circle
-                                    className="handleMidLineAnchorRight plane source-plane"
-                                    cx={this.state.midLineAnchorRight.xAnchor}
-                                    cy={this.state.midLineAnchorRight.yAnchor}
-                                    r={this.state.midLineAnchorLeft.radius}
-                                    fill="red"
-                                    data-toggle="tooltip"
-                                    data-placement="bottom"
-                                    title="Drag this anchor horizontally to adjust receiver plane length. 
-                                    Also, you can drag the receiver plane vertically to adjust the elevation
-                                     of the receiver plane relative to the source plane"
-                                />
+                                <line className="handle2 float-source plane receiver-plane" x1={this.state.receiverLinePosition.x1}
+                                    y1={this.state.receiverLinePosition.y1} x2={this.state.receiverLinePosition.x2}
+                                    y2={this.state.receiverLinePosition.y2} />
                             </Draggable>
 
-                            {/* Receiver Objet (Vertical Line)*/}
-                            <line
-                                className="handle3 plane source-plane"
-                                x1={this.state.receiverObject.x1}
-                                y1={this.state.receiverObject.y1}
-                                x2={this.state.receiverObject.x2}
-                                y2={this.state.receiverObject.y2}
-                            />
 
-                            {/* Receiver Symbol*/}
                             <Draggable
                                 axis="y"
                                 handle=".handle4"
@@ -1590,26 +1165,21 @@ class Graphics extends React.Component {
                                 onDrag={this.handleDragReceiverSymbol}
                                 onStop={this.handleDragReceiverSymbolOnStop}
                                 position={{ x: 0, y: 0 }}
-                                bounds={{
-                                    // top: this.setBoundReceiverSymbol('top'), 
-                                    left: 0,
-                                    right: 0,
-                                    bottom: this.setBoundReceiverSymbol('bottom')
-                                }}
+                            // bounds={{ bottom: (this.state.receiverObject.y1 -this.state.receiverObject.y2) * SCALE_Y > 1.5  ? 1000: 0 }}
+                            // bounds={{ top: -RECEIVER_HEIGHT_IN_PIXELS * 2, left: 0, right: 0, bottom: 0 }}>
                             >
-                                <circle
-                                    className="handle4 plane source-plane"
-                                    cx={this.state.receiverSymbol.xAnchor}
-                                    cy={this.state.receiverSymbol.yAnchor}
-                                    r={this.state.receiverSymbol.radius}
-                                    fill="red"
-                                    data-toggle="tooltip"
-                                    data-placement="bottom"
-                                    title="Drag this anchor vertically to set the desired height of the receiver"
-                                />
+                                <circle className="handle4 plane source-plane" cx={this.state.receiverSymbol.xAnchor} cy={this.state.receiverSymbol.yAnchor}
+                                    r={this.state.receiverSymbol.radius} fill="red" />
                             </Draggable>
-                        </svg>
 
+                            <line className="handle3 plane source-plane" x1={this.state.receiverObject.x1}
+                                y1={this.state.receiverObject.y1}
+                                x2={this.state.receiverObject.x2} y2={this.state.receiverObject.y2} />
+
+
+
+                        </svg>
+                        
                         {/*
                         <div>
                             
@@ -1641,14 +1211,16 @@ class Graphics extends React.Component {
                             <label><h6>Distance between Receiver object to Right Anchor: {(Math.abs(this.state.receiverObject.x1 - this.state.midLinePosition.x2) * SCALE_X).toFixed(1)} m</h6></label><br />
                         </div>
                         */}
+                        <div>
+                            <p>Instructions (coming soon...)</p>
+                            <p>This tool is developed based on the calculation method outlined in this document: <a href="http://publications.gc.ca/collections/collection_2017/schl-cmhc/NH15-27-1981-eng.pdf">CMHC Road and Rail Noise Assessment</a></p>
+                        </div>
                     </div>
-                    
-                </div>
-                <div className="row">
-                    <div className="col">
+                    <div className="col-sm-3">
                         <InputForm stateInputs={this.state.inputValues} setStateInputsFromInputForm={this.setStateInputsFromInputForm} runBarrierCalc={this.runBarrierCalc} />
-                        </div>
-                        </div>
+                    </div>
+                </div>
+
 
             </div>
         )

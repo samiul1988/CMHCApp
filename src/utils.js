@@ -624,4 +624,16 @@ const extrapolateLine = (x1, y1, x2, y2, X)=>{
 // const cal_EffBarrierAtt = findEffBarrierAtt(barrierInterruptsLOS, pathLengthDifference, 100); // w is forcefully set to 100 to make the barrier of infinite length
 // console.log(cal_EffBarrierAtt);
 
-module.exports={calculateSPLat30m,calculateCorrectionForRoadGrad,calculateCorrectionForInterruptedTrafficFlow,calculateEqSourceHeight,calculateCorrDistAndHeight,calculateEffBarrierAtt, isBreakingLOS, angleBetweenPoints, calculateFirstPointOfContact, calculateEffectiveBarrierPosition, extrapolateLine};
+module.exports={
+    calculateSPLat30m,
+    calculateCorrectionForRoadGrad,
+    calculateCorrectionForInterruptedTrafficFlow,
+    calculateEqSourceHeight,
+    calculateCorrDistAndHeight,
+    calculateEffBarrierAtt, 
+    isBreakingLOS, 
+    angleBetweenPoints, 
+    calculateFirstPointOfContact, 
+    calculateEffectiveBarrierPosition, 
+    extrapolateLine
+};

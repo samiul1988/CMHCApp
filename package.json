@@ -23,7 +23,7 @@
     "serve": "live-server public/",
     "build:dev": "webpack --watch",
     "build:prod": "webpack -p --env production",
-    "start": "node server.js"
+    "start":"node server.js"
   },
   "eslintConfig": {
     "extends": "react-app"
